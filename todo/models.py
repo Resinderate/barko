@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -14,13 +12,14 @@ class Task(models.Model):
 	marked_complete_by = models.ForeignKey(
 		User,
 		related_name="marked_complete_by",
-		on_delete=models.CASCADE
+		on_delete=models.CASCADE,
+		null=True
 	)
 	title = models.CharField(max_length=100)
 	description = models.TextField()
 	task_open = models.BooleanField(default=True)
 	created_date = models.DateTimeField("date created")
-	completed_date = models.DateTimeField("date completed")
+	completed_date = models.DateTimeField("date completed", null=True)
 
 	@classmethod
 	def create(cls, owner, title, description):
