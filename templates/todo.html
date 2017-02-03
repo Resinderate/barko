@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+ 
+{% block title %}Barko | Todo{% endblock %}
+ 
+{% block content %}
+
+<h1>Barko</h1>
+<p>Tasks</p>
+{% for user, tasks in task_map.items %}
+<h2>{{ user.username }}'s Tasks:</h2>
+		<ul>
+		{% for task in tasks %}
+			<li>{{ task.title }} : {{ task.description }} : {{ task.owner }} : {{task.created_date }} : {{ task.task_open }} : {{ task.completed_date }} : {{ task.marked_compelted_by.username }} : {{ task.id }}</li>
+			{% endfor %}
+		</ul>
+{% endfor %}
+
+<form method="post" action="/todo/task/">
+{% csrf_token %}
+<table>
+<tr>
+    <td><label for="title">Task title:</label></td>
+    <td><input type="text" name="title" value="" id="title"></td>
+</tr>
+<tr>
+    <td><label for="description">Description:</label></td>
+    <td><input type="text" name="description" value="" id="description"></td>
+</tr>
+</table>
+
+<input type="submit" value="Create" />
+</form>
+
+{% endblock %}
