@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.shortcuts import redirect
@@ -10,10 +11,18 @@ from .models import Task
 
 def todo(request):
 	if request.user.is_authenticated():
-		tasks = Task.objects.all()
+		users = User.objects.all()
+
+		# Might need a list so you can sort by number of tasks.
+		task_map = {}
+
+		for user in users:
+			user_tasks = Task.objects.filter(owner=user)
+			task_map[user] = user_tasks
+
 		context = {}
 		context.update(csrf(request))
-		context["tasks"] = tasks
+		context["task_map"] = task_map
 		return render_to_response("todo.html", context)
 	else:
 		return redirect("login")
