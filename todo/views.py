@@ -12,10 +12,12 @@ from .models import Task
 
 def todo(request):
     if request.user.is_authenticated():
+        context = csrf(request)
+        
+        user = request.user
+        context["user"] = user
+        
         task_map = get_todo_data()
-
-        context = {}
-        context.update(csrf(request))
         context["task_map"] = task_map
 
         return render_to_response("todo.html", context)
@@ -36,12 +38,6 @@ def get_todo_data():
 
 def sort_by_most_tasks():
     pass
-
-
-# Get rid of this.
-@require_http_methods(["POST"])
-def task(request):
-
 
 class TaskView(View):
     def post(self, request):
