@@ -36,6 +36,21 @@ class Task(models.Model):
 			completed_date=None
 		)
 
+	def complete(self, completed_by):
+		self.task_open = False
+		self.marked_complete_by = completed_by
+		self.completed_date = timezone.now()
+		self.save()
+
+	def uncomplete(self):
+		self.task_open = True
+		self.marked_complete_by = None
+		self.completed_date = None
+		self.save()
+
+	def edit(title):
+		pass
+
 
 	def __str__(self):
 		return self.title

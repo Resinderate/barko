@@ -26,8 +26,8 @@ class LoginView(View):
 
     def _get_login_data(self, request):
         data = {}
-        data["username"] = request.POST.get('username', '')
-        data["password"] = request.POST.get('password', '')
+        data["username"] = request.POST.get("username", "")
+        data["password"] = request.POST.get("password", "")
         return data
 
     def _login_user(self, request, user):
@@ -53,9 +53,9 @@ class RegisterView(View):
 
     def _get_register_data(self, request):
         data = {}
-        data["username"] = request.POST.get('username', '')
-        data["password"] = request.POST.get('password', '')
-        data["confirm_password"] = request.POST.get('confirm_password', '')
+        data["username"] = request.POST.get("username", "")
+        data["password"] = request.POST.get("password", "")
+        data["confirm_password"] = request.POST.get("confirm_password", "")
         return data
     
     def _passwords_are_same(self, password, repeated_password):

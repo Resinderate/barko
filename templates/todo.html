@@ -3,33 +3,62 @@
 {% block title %}Barko | Todo{% endblock %}
  
 {% block content %}
-<button class="btn btn-primary" id="hide-completed">Hide Completed</button>
 
-<!-- Lists of tasks -->
 <div class="row">
-{% for user, tasks in task_map.items %}
+{% for task_list in task_lists %}
+
 <div class="col-md-3">
-  <div class="panel panel-default">
+  <div class="panel panel-primary">
     <div class="panel-heading">
-      <strong class="text-capitalize">{{ user.username }}'s Tasks:</strong>
+      <strong class="text-capitalize">{{ task_list.user.username }}'s Tasks:</strong>
+    </div>
+    <div class="panel-body">
+      <div class="panel-group" id="accordion{{ task_list.user.id }}" role="tablist">
+      {% for task in task_list.tasks %}
+        <div class="panel panel-default">
+          <div class="panel-heading" role="tab" id="taskheading{{ task.id }}">
+            <h4 class="panel-title">
+              <a role="button" data-toggle="collapse" data-parent="#accordion{{ task_list.user.id }}" href="#taskcollapse{{ task.id }}">
+                {{ task.title }}
+              </a>
+              <button type="button" class="btn btn-xs btn-success pull-right" data-toggle="tooltip" title="Complete task!">
+              <span class="glyphicon glyphicon-ok"></span>
+            </button>
+            </h4>
+          </div>
+          <div id="taskcollapse{{ task.id }}" class="panel-collapse collapse" role="tabpanel">
+            <div class="panel-body">
+              <!-- Give a data packet, and loop over it here -->
+              {% for pair in task.filled_in_properties %}
+              <row>
+                <div class="col-md-4 text-right">
+                  <strong>{{ pair.header }}</strong>
+                </div>
+                <div class="col-md-8 text-left">
+                  {{ pair.value }}
+                </div>
+              </row>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+      </div>
+      {% if task_list.user.is_current_user %}
       <button type="button" class="btn btn-default">
         <span class="glyphicon glyphicon-plus"></span> Add Task
       </button>
-    </div>
-    <div class="panel-body">
-      <ul class="list-group">
-      {% for task in tasks %}
-        <li class="list-group-item">
-        {{ task.title }}
-        <button type="button" class="btn btn-xs btn-default">
-          <span class="glyphicon glyphicon-ok"></span>
-        </button>
-        </li>
-        {% endfor %}
-      </ul>
+      {% endif %}
     </div>
   </div>
 </div>
+
+<!-- Limit the number of task lists per row to 4 -->
+{% if forloop.counter|divisibleby:4 %}
+</div>
+<div class="row">
+{% endif %}
+
 {% endfor %}
 </div>
 
@@ -51,5 +80,7 @@
 
 <input type="submit" value="Create" />
 </form>
+
+<button class="btn btn-primary" id="hide-completed">Hide Completed</button>
 
 {% endblock %}

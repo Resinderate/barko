@@ -15,10 +15,10 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
-import login.views
+import todo.views
 
 urlpatterns = [
-	url(r'^$', login.views.LoginView.as_view()),
+	url(r'^$', todo.views.TodoView.as_view()),
 	url(r"^todo/", include("todo.urls")),
     url(r"^auth/", include("login.urls")),
     url(r'^admin/', admin.site.urls),
