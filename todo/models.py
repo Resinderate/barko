@@ -48,9 +48,5 @@ class Task(models.Model):
 		self.completed_date = None
 		self.save()
 
-	def edit(title):
-		pass
-
-
 	def __str__(self):
 		return self.title
