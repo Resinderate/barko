@@ -21,34 +21,41 @@
     <div class="panel-body">
       <div class="panel-group" id="accordion{{ task_list.user.id }}" role="tablist">
       {% for task in task_list.tasks %}
+        {% if task.task_open %}
         <div class="panel panel-default">
+        {% else %}
+        <div class="panel panel-success task-completed">
+        {% endif %}
           <div class="panel-heading" role="tab" id="taskheading{{ task.id }}">
             <h4 class="panel-title">
               <a role="button" data-toggle="collapse" data-parent="#accordion{{ task_list.user.id }}" href="#taskcollapse{{ task.id }}">
                 {{ task.title }}
               </a>
               {% if task.is_current_user %}
-              <button type="button" class="btn btn-xs btn-danger pull-right" data-toggle="tooltip" title="Delete task">
+              <button type="button" class="btn btn-xs btn-primary pull-right delete-task" data-task-id="{{ task.id }}" data-toggle="tooltip" title="Delete task">
                 <span class="glyphicon glyphicon-trash"></span>
               </button>
-              <button type="button" class="btn btn-xs btn-warning pull-right" data-toggle="tooltip" title="Edit task">
+              <button type="button" class="btn btn-xs btn-warning pull-right" data-toggle="modal" data-target="#edit_task_{{ task.id }}">
+                <span data-toggle="tooltip" title="Edit task">
                 <span class="glyphicon glyphicon-pencil"></span>
+                </span>
               </button>
               {% endif %}
-              <button type="button" class="btn btn-xs btn-success pull-right" data-toggle="tooltip" title="Complete task!">
+              {% if task.task_open %}
+              <button type="button" class="btn btn-xs btn-success pull-right complete-task" data-task-id="{{ task.id }}" data-toggle="tooltip" title="Complete task!">
                 <span class="glyphicon glyphicon-ok"></span>
               </button>
+              {% endif %}
             </h4>
           </div>
           <div id="taskcollapse{{ task.id }}" class="panel-collapse collapse" role="tabpanel">
             <div class="panel-body">
-              <!-- Give a data packet, and loop over it here -->
               {% for pair in task.filled_in_properties %}
               <row>
-                <div class="col-md-4 text-right">
+                <div class="col-md-5 text-right">
                   <strong>{{ pair.header }}</strong>
                 </div>
-                <div class="col-md-8 text-left">
+                <div class="col-md-7 text-left">
                   {{ pair.value }}
                 </div>
               </row>
@@ -59,7 +66,8 @@
       {% endfor %}
       </div>
       {% if task_list.user.is_current_user %}
-      <button type="button" class="btn btn-default">
+      <!-- Button trigger modal -->
+      <button type="button" class="btn btn-default" data-toggle="modal" data-target="#new_task">
         <span class="glyphicon glyphicon-plus"></span> Add Task
       </button>
       {% endif %}
@@ -77,24 +85,76 @@
 </div>
 
 
-<!-- This is prolly moving -->
-<!-- Fix the model first! -->
-<form method="post" action="/todo/task/">
-{% csrf_token %}
-<table>
-<tr>
-  <td><label for="title">Task title:</label></td>
-  <td><input type="text" name="title" value="" id="title"></td>
-</tr>
-<tr>
-  <td><label for="description">Description:</label></td>
-  <td><input type="text" name="description" value="" id="description"></td>
-</tr>
-</table>
+<!-- Button to hide complete tasks. -->
+<button class="btn btn-primary" id="hide-completed">Toggle Hide Completed</button>
 
-<input type="submit" value="Create" />
-</form>
+<!-- Modals -->
+<!-- Add new task Modal -->
+<div class="modal fade" id="new_task" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="post" action="/todo/task/">
+        {% csrf_token %}
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <h4 class="modal-title">New Task for <span class="text-capitalize">{{ user.username }}</span></h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" name="title" id="title">
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea class="form-control" rows="3" name="description" id="description"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
-<button class="btn btn-primary" id="hide-completed">Hide Completed</button>
+<!-- Add modals for each of current users tasks -->
+{% for task in task_lists.0.tasks %}
+<div class="modal fade" id="edit_task_{{ task.id }}" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <form method="post" action="/todo/task/">
+        {% csrf_token %}
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+          <h4 class="modal-title">Edit task: {{ task.title }}</h4>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="title">Title:</label>
+            <input type="text" class="form-control" name="title" id="title" value="{{ task.title }}">
+          </div>
+          <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea class="form-control" rows="3" name="description" id="description">{{ task.description }}</textarea>
+          </div>
+          <div class="form-group">
+            <label for="completed">Completed</label>
+
+            <input id='completed_hidden' type='hidden' value='false' name='completed'>
+            <input id='completed' type='checkbox' value='true' name='completed' {% if not task.task_open %} checked {% endif %}>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="hidden" name="_method" value="PUT"/>
+          <input type="hidden" name="task_id" value="{{ task.id }}"/>
+          <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
 
 {% endblock %}

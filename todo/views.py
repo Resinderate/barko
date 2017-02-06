@@ -30,12 +30,10 @@ class TodoView(View):
         users = User.objects.exclude(id=current_user.id)
         non_user_data = self._get_non_user_tasks(users)
         non_user_data = self._sort_users_on_task_count(non_user_data)
-        
+
         current_user_tasks = self._get_user_tasks(current_user)
         
         data.append({"user": current_user, "tasks": current_user_tasks})
-        print current_user_tasks[0]
-        print current_user_tasks[0].filled_in_properties
         data.extend(non_user_data)
 
         return data
@@ -43,7 +41,13 @@ class TodoView(View):
     def _get_non_user_tasks(self, users):
         non_current_user_data = []
         for user in users:
-            user_tasks = Task.objects.filter(owner=user).order_by("created_date")
+            user_tasks = Task.objects.filter(
+                owner=user
+            ).order_by(
+                "created_date"
+            ).order_by(
+                "-task_open"
+            )
             for task in user_tasks:
                 self._mark_filled_in_task_properties(task)
             non_current_user_data.append({"user": user, "tasks": user_tasks})
@@ -62,7 +66,11 @@ class TodoView(View):
     def _get_user_tasks(self, current_user):
         current_user_tasks = Task.objects.filter(
             owner=current_user
-        ).order_by("created_date")
+        ).order_by(
+            "created_date"
+        ).order_by(
+            "-task_open"
+        )
         for task in current_user_tasks:
             self._mark_filled_in_task_properties(task)
             task.is_current_user = True
@@ -109,10 +117,10 @@ class TaskView(View):
         if not method:
             return self._create_task(request)
         elif method == "PUT":
-            task_open = request.POST.get("task_open", "")
+            completed = request.POST.get("completed", "")
             title = request.POST.get("title", "")
             description = request.POST.get("description", "")
-            if task_open and not (title or description):
+            if completed and not (title or description):
                 return self._complete_task(request)
             else:
                 return self._edit_task(request)
@@ -138,16 +146,18 @@ class TaskView(View):
         task = Task.objects.get(id=task_id)
         task.complete(user)
 
+        return redirect("todo")
+
     def _edit_task(self, request):
-        task_open = request.POST.get("task_open", "")
-        task_open = self._parse_task_open_option(task_open)
+        completed = request.POST.get("completed", "")
+        task_open = self._parse_task_open_option(completed)
         title = request.POST.get("title", "")
         description = request.POST.get("description", "")
         task_id = int(request.POST.get("task_id", ""))
 
         task = Task.objects.get(id=task_id)
-        if task_open and task_open != task.task_open:
-            self.toggle_complete(task, task_open, request.user)
+        if task_open != task.task_open:
+            self._toggle_complete(task, task_open, request.user)
 
         if title and title != task.title:
             task.title = title
@@ -157,11 +167,17 @@ class TaskView(View):
             task.description = description
             task.save()
 
+        return redirect("todo")
+
     def _parse_task_open_option(self, value):
+        """
+        Inversing the result here. Switching from the UI verb 'complete' to
+        model 'is_open'.
+        """
         if value == "true":
-            return True
-        elif value == "false":
             return False
+        elif value == "false":
+            return True
         else:
             return None
 
@@ -178,6 +194,7 @@ class TaskView(View):
             return redirect("todo")
 
         task.delete()
+        return redirect("todo")
 
     def _no_valid_task(self):
         redirect("todo")

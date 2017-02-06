@@ -49,7 +49,7 @@ class RegisterView(View):
                                     form_data["confirm_password"]):
             return self._register_user(form_data["username"], form_data["password"])
         else:
-            return self._return_different_password_error()
+            return self._return_different_password_error(request)
 
     def _get_register_data(self, request):
         data = {}
@@ -61,7 +61,7 @@ class RegisterView(View):
     def _passwords_are_same(self, password, repeated_password):
         return password == repeated_password
 
-    def _return_different_password_error(self):
+    def _return_different_password_error(self, request):
         context = csrf(request)
         context = {"error": "Passwords do not match."}
         return render_to_response("auth/register.html", context)
