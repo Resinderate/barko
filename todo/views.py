@@ -15,12 +15,20 @@ class TodoView(View):
             user = request.user
             context["user"] = user
 
-            data = self._get_todo_data(user)
+            data = TodoData(user).data()
             context["task_lists"] = data
 
             return render_to_response("todo.html", context)
         else:
             return redirect("login")
+
+class TodoData(object):
+
+    def __init__(self, user):
+        self.user = user
+
+    def data(self):
+        return self._get_todo_data(self.user)
 
     def _get_todo_data(self, current_user):
         current_user.is_current_user = True
