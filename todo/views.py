@@ -4,7 +4,7 @@ from django.shortcuts import redirect
 from django.template.context_processors import csrf
 from django.views import View
 
-from .models import Task
+from todo.models import Task
 
 
 class TodoView(View):
