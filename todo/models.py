@@ -26,7 +26,7 @@ class Task(models.Model):
 		"""
 		Utility method to fill in default values upon creation.
 		"""
-		return Task(
+		task = Task(
 			owner=owner,
 			marked_complete_by=None,
 			title=title,
@@ -35,6 +35,8 @@ class Task(models.Model):
 			created_date=timezone.now(),
 			completed_date=None
 		)
+		task.save()
+		return task
 
 	def complete(self, completed_by):
 		self.task_open = False

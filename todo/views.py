@@ -25,6 +25,11 @@ class TodoView(View):
 class TodoData(object):
 
     def __init__(self, user):
+        """
+        :Params:
+            user : User
+                The current user to model the data around.
+        """
         self.user = user
 
     def data(self):
@@ -37,7 +42,8 @@ class TodoData(object):
         
         users = User.objects.exclude(id=current_user.id)
         non_user_data = self._get_non_user_tasks(users)
-        non_user_data = self._sort_users_on_task_count(non_user_data)
+        self._sort_users_on_task_count(non_user_data)
+        self._get_rid_of_users_with_no_tasks(non_user_data)
 
         current_user_tasks = self._get_user_tasks(current_user)
         
@@ -68,7 +74,6 @@ class TodoData(object):
                 The dictionary must contain a 'tasks' key which contains list.
         """
         data.sort(key=lambda d: len(d["tasks"]), reverse=True)
-        return data
 
 
     def _get_user_tasks(self, current_user):
@@ -83,6 +88,12 @@ class TodoData(object):
             self._mark_filled_in_task_properties(task)
             task.is_current_user = True
         return current_user_tasks
+
+    def _get_rid_of_users_with_no_tasks(self, user_data):
+        for i in xrange(len(user_data)):
+            if not user_data[i]["tasks"]:
+                del user_data[i]
+                i -= 1
 
     def _mark_filled_in_task_properties(self, task):
         properties = []
@@ -142,7 +153,6 @@ class TaskView(View):
         title = request.POST.get("title", "")
         description = request.POST.get("description", "")
         new_task = Task.create(user, title, description)
-        new_task.save()
 
         return redirect("todo")
 
