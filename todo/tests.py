@@ -49,3 +49,6 @@ class TaskViewTest(TestCase):
 
 class TodoViewTest(TestCase):
     pass
+
+class TodoDataTest(TestCase):
+    pass
