@@ -1,5 +1,5 @@
 # Barko To-Do List App
-![](http://i.imgur.com/i4f5j3s.png =800x)
+![](http://i.imgur.com/IYQzBtM.png =800x)
 
 ### Tech
 * Python 2.7
