@@ -21,6 +21,12 @@ Running at default:
 ```sh
 127.0.0.1:8000
 ```
+Sample logins in test db:
+```sh
+User : Pass
+admin : adminadmin
+ronan : ronanronan
+```
 
 ### Run Tests
 ```sh
