@@ -47,3 +47,4 @@ Stuff next on the list if it was taken further:
 * Server side Forms.
 * Fix task details formatting on small devices.
 * System to handle really long titles.
+* Deployment prep.
