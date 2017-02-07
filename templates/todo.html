@@ -139,8 +139,8 @@
             <textarea class="form-control" rows="3" name="description" id="description">{{ task.description }}</textarea>
           </div>
           <div class="form-group">
-            <label for="completed">Completed</label>
-
+            <label for="completed">Completed:</label>
+            <br/>
             <input id='completed_hidden' type='hidden' value='false' name='completed'>
             <input id='completed' type='checkbox' value='true' name='completed' {% if not task.task_open %} checked {% endif %}>
           </div>
