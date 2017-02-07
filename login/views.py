@@ -35,7 +35,8 @@ class LoginView(View):
         return redirect("todo")
 
     def _incorrect_login_error(self):
-        context = {"error": "Incorrect username or password."}
+        context = csrf(request)
+        context["error"] = "Incorrect username or password."
         return render_to_response("auth/login.html", context)
 
 class RegisterView(View):
@@ -63,7 +64,7 @@ class RegisterView(View):
 
     def _return_different_password_error(self, request):
         context = csrf(request)
-        context = {"error": "Passwords do not match."}
+        context["error"] = "Passwords do not match."
         return render_to_response("auth/register.html", context)
 
     def _register_user(self, username, password):
