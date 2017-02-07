@@ -18,7 +18,7 @@ from django.contrib import admin
 import todo.views
 
 urlpatterns = [
-	url(r'^$', todo.views.TodoView.as_view()),
+	url(r'^$', todo.views.TodoView.as_view(), name="home"),
 	url(r"^todo/", include("todo.urls")),
     url(r"^auth/", include("login.urls")),
     url(r'^admin/', admin.site.urls),

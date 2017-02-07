@@ -77,6 +77,7 @@ class TodoData(object):
 
 
     def _get_user_tasks(self, current_user):
+        tasks = []
         current_user_tasks = Task.objects.filter(
             owner=current_user
         ).order_by(
@@ -87,7 +88,8 @@ class TodoData(object):
         for task in current_user_tasks:
             self._mark_filled_in_task_properties(task)
             task.is_current_user = True
-        return current_user_tasks
+            tasks.append(task)
+        return tasks
 
     def _get_rid_of_users_with_no_tasks(self, user_data):
         for i in xrange(len(user_data)):
@@ -103,8 +105,7 @@ class TodoData(object):
         properties.append({"header": "Created at:", "value": task.created_date})
         properties.append({"header": "Completed:",
                            "value": self._get_task_complete_desc(task)})
-        # Value that might be present
-        # Completed by
+        # Values that might be present
         if task.marked_complete_by:
             properties.append({"header": "Completed By:",
                                "value": task.marked_complete_by.username})
@@ -127,9 +128,8 @@ class TaskView(View):
         We can't create PUT or DELETE requests from a HTML form, so we're
         funneling them through the POST verb and then re-routing.
         """
-        # Must be logged in to affect tasks.
-        if not request.user:
-            redirect("todo")
+        if not request.user.is_authenticated():
+            return redirect("todo")
 
         # _method contains the true verb the form want to use, if it's not POST.
         method = request.POST.get("_method", "")
@@ -214,5 +214,5 @@ class TaskView(View):
         task.delete()
         return redirect("todo")
 
-    def _no_valid_task(self):
-        redirect("todo")
+    def _no_valid_action(self):
+        return redirect("todo")

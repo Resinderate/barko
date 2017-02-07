@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.test import TestCase
 
 from todo.models import Task
@@ -8,50 +9,117 @@ from todo.views import TodoData
 class TaskModelTest(TestCase):
 
     def setUp(self):
-        user = User.objects.create_user("ronan", password="pw")
-        task = Task.create(user, "Test Title", "Test Desc")
-        self.test_task_id = task.id
+        self.user = User.objects.create_user("ronan", password="pw")
+        self.task = Task.create(self.user, "Test Title", "Test Desc")
 
     def test_task_defaults(self):
         """
         Make sure we're getting expected defaults for values we don't specify
         during creation.
         """
-        task = Task.objects.get(id=self.test_task_id)
-        self.assertTrue(task.task_open)
-        self.assertIsNone(task.marked_complete_by)
-        self.assertIsNone(task.completed_date)
+        self.assertTrue(self.task.task_open)
+        self.assertIsNone(self.task.marked_complete_by)
+        self.assertIsNone(self.task.completed_date)
 
     def test_task_initial_data(self):
-        task = Task.objects.get(id=self.test_task_id)
-        owner = User.objects.get(username="ronan")
-        self.assertEqual(owner, task.owner)
-        self.assertEqual("Test Title", task.title)
-        self.assertEqual("Test Desc", task.description)
+        self.assertEqual(self.user, self.task.owner)
+        self.assertEqual("Test Title", self.task.title)
+        self.assertEqual("Test Desc", self.task.description)
 
     def test_complete_task(self):
-        task = Task.objects.get(id=self.test_task_id)
-        completer = User.objects.get(username="ronan")
-        task.complete(completer)
-        self.assertFalse(task.task_open)
-        self.assertEqual(completer, task.marked_complete_by)
-        self.assertIsNotNone(task.completed_date)
+        self.task.complete(self.user)
+        self.assertFalse(self.task.task_open)
+        self.assertEqual(self.user, self.task.marked_complete_by)
+        self.assertIsNotNone(self.task.completed_date)
 
     def test_task_str(self):
-        task = Task.objects.get(id=self.test_task_id)
-        self.assertEqual("Test Title", str(task))
+        self.assertEqual("Test Title", str(self.task))
 
 
 class TaskViewTest(TestCase):
-    pass
 
+    def setUp(self):
+        self.user = User.objects.create_user("ronan", password="pw")
+
+    def test_valid_create_task(self):
+        self.client.login(username="ronan", password="pw")
+        response = self.client.post(reverse("task"), follow=True)
+        self.assertEqual(1, len(Task.objects.all()))
+        self.assertRedirects(response, reverse("todo"))
+
+    def test_edit_task_complete(self):
+        self.client.login(username="ronan", password="pw")
+        task = Task.create(self.user, "blah", "blah")
+        response = self.client.post(reverse("task"),
+                                    {"_method": "PUT",
+                                     "task_id": 1,
+                                     "completed": "true"},
+                                    follow=True)
+        task.refresh_from_db()
+        self.assertFalse(task.task_open)
+        self.assertRedirects(response, reverse("todo"))
+
+    def test_edit_task_all(self):
+        self.client.login(username="ronan", password="pw")
+        task = Task.create(self.user, "blah", "blah")
+        response = self.client.post(reverse("task"),
+                                    {"_method": "PUT",
+                                     "task_id": 1,
+                                     "title": "new title",
+                                     "description": "new desc",
+                                     },
+                                    follow=True)
+        task.refresh_from_db()
+        self.assertEqual("new title", task.title)
+        self.assertEqual("new desc", task.description)
+        self.assertRedirects(response, reverse("todo"))
+
+    def test_delete_task(self):
+        self.client.login(username="ronan", password="pw")
+        task = Task.create(self.user, "blah", "blah")
+        response = self.client.post(reverse("task"),
+                                    {"_method": "DELETE",
+                                     "task_id": 1,
+                                     },
+                                    follow=True)
+        tasks = Task.objects.all()
+        self.assertEqual(0, len(tasks))
+        self.assertRedirects(response, reverse("todo"))
+
+    def test_no_valid_action(self):
+        self.client.login(username="ronan", password="pw")
+        response = self.client.post(reverse("task"),
+                                    {"_method": "FAKE"},
+                                    follow=True)
+        self.assertRedirects(response, reverse("todo"))
+
+    def test_not_logged_in(self):
+        response = self.client.post(reverse("task"), follow=True)
+        self.assertRedirects(response, reverse("login"))
+
+    def test_get_invalid_method(self):
+        response = self.client.get(reverse("task"))
+        self.assertEqual(405, response.status_code)
 
 
 class TodoViewTest(TestCase):
-    pass
+
+    def setUp(self):
+        self.user = User.objects.create_user("ronan", password="pw")
+
+    def test_valid_request(self):
+        self.client.login(username="ronan", password="pw")
+        response = self.client.get(reverse("todo"))
+        self.assertEqual(200, response.status_code)
+        self.assertTemplateUsed(response, "todo.html")
+
+    def test_denies_anon(self):
+        response = self.client.get(reverse("todo"), follow=True)
+        self.assertRedirects(response, reverse("login"))
 
 
 class TodoDataTest(TestCase):
+
     def setUp(self):
         self.user = User.objects.create_user("ronan", password="pw")
 
